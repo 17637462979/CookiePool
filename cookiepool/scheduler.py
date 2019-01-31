@@ -7,7 +7,7 @@ from .creator import WeiboCookieCreator
 class Scheduler(object):
     def api(self):
         print('API接口开始运行: ')
-        app.run(host=API_HOST, prot=API_PORT)
+        app.run(host=API_HOST, port=API_PORT)
 
     def creater(self, cycle=CYCLE):
         while True:

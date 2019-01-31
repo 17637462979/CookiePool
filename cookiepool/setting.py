@@ -12,7 +12,12 @@ TESTER_ENABLED = True
 # todo
 
 # redis参数设置
-# todo
+REDIS_HOST = 'localhost'
+REDIS_PORT = 6379
+REDIS_PASSWORD = None
+
+REDIS_DOMAIN = '*'
+REDIS_NAME = '*'
 
 # 浏览器类型
 DEFAULT_TYPE = 'Chrome'
