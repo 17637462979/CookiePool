@@ -6,7 +6,7 @@ from threading import Thread
 
 import requests
 
-from .db import AccoutRedisClient, CookieRedisClient
+from .db import AccountRedisClient, CookieRedisClient
 from .setting import *
 from .yundama import Yundama
 from selenium import webdriver
@@ -22,10 +22,10 @@ from selenium.webdriver.support.wait import  WebDriverWait
 class CookieCreator(object):
     def __init__(self, name='default'):
         self.name = name
-        self.account_redis = AccoutRedisClient(name=self.name)
+        self.account_redis = AccountRedisClient(name=self.name)
         self.cookie_redis = CookieRedisClient(name=self.name)
 
-    def set_cookies(self):
+    def set_cookies(self, queue):
         for i in range(THREAD_COUNT):
             cookieThread = CookieCreatorThread(queue,
                                                cookie_redis=self.cookie_redis,
@@ -33,7 +33,6 @@ class CookieCreator(object):
             cookieThread.start()
 
     def run(self):
-        print("WeiboCookieCreator start")
         accounts = self.account_redis.all()
         cookies = self.cookie_redis.all()
         accounts = list(accounts)
@@ -73,8 +72,8 @@ class CookieCreatorThread(Thread):
         elif browser_type == 'Chrome':
             opt = webdriver.ChromeOptions()
             opt.headless = True
-            path = 'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe'
-            self.browser = webdriver.Chrome(executable_path=path, options=opt)
+            # path = 'C:\Progra~1\Google\Chrome\Application\chrome.exe' #等价于C:\Program Files (x86)，因为win10 64bit不能执行带空格的命令
+            self.browser = webdriver.Chrome(options=opt)
             self.browser.set_window_size(1400, 500)
 
     def is_success(self, username):
@@ -82,15 +81,14 @@ class CookieCreatorThread(Thread):
         success = wait.until(EC.visibility_of_element_located((By.XPATH, '//textarea[@class="W_input"]')))
         if success:
             print('登录成功')
-        cookies = {}
-        for cookie in self.browser.get_cookies():
-            if cookie['name'] == 'SUB':
-                cookies[cookie['name']] = cookie["value"]
-        print("成功获取到Cookies")
-        return (username, json.dumps(cookies))
+            cookies = {}
+            for cookie in self.browser.get_cookies():
+                if cookie['name'] == 'SUB':
+                    cookies[cookie['name']] = cookie["value"]
+            print("成功获取到Cookies")
+            return (username, json.dumps(cookies))
 
     def new_cookies(self, username, password):
-        print('为{}创建cookie').format(username)
         self.browser.delete_all_cookies()
         self.browser.get('https://weibo.com/')
         wait = WebDriverWait(self.browser, 25)
@@ -99,10 +97,9 @@ class CookieCreatorThread(Thread):
             user = wait.until(EC.visibility_of_element_located((By.XPATH,
                                                                 '//input[@id="loginname"]')))
             user.send_keys(username)
-
-            psd = wait.until(EC.visibility_of_element_located((By.XPATH, '//iinput[@type="password"]')))
+            psd = wait.until(EC.visibility_of_element_located((By.XPATH, '//input[@type="password"]')))
             psd.send_keys(password)
-            btn = wait.until(EC.visibility_of_element_located((By.XPATH, '//a[@tabindex="6"')))
+            btn = wait.until(EC.visibility_of_element_located((By.XPATH, '//a[@tabindex="6"]')))
             btn.click()
             try:
                 result = self.is_success(username)
@@ -112,8 +109,8 @@ class CookieCreatorThread(Thread):
                 print('出现验证码，开始识别验证码')
                 yzm = wait.until(EC.visibility_of_element_located((By.XPATH, '//input[@name="verifycode"]')))
                 code = self.browser.find_element_by_xpath(('//img[@node-type="verifycode_image"]'))
-                code_url = code.get_attribute('src')
-                response = requests.get('src')
+                code_image_url = code.get_attribute('src')
+                response = requests.get(code_image_url)
                 res = self.ydm.identify(stream=response.content)
                 if not res:
                     print('验证码识别失败， 跳过识别')
@@ -141,7 +138,7 @@ class CookieCreatorThread(Thread):
             account = self.queue.get()
             self._init_browser(browser_type=DEFAULT_TYPE)
             results = self.new_cookies(account.get('username'), account.get('password'))
-            self.cloe()
+            self.close()
             if results:
                 username, cookies = results
                 print('aving cookies to redis', username, cookies)

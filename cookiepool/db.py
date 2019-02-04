@@ -21,7 +21,7 @@ class RedisClient():
     def get(self, key):
         raise NotImplementedError
 
-    def delete(selfself, key):
+    def delete(self, key):
         raise NotImplementedError
 
     def get_keys(self):
@@ -40,7 +40,7 @@ class RedisClient():
         self.db.flushall()
 
 
-class AccoutRedisClient(RedisClient):
+class AccountRedisClient(RedisClient):
     def __init__(self, host=REDIS_HOST, port=REDIS_PORT,
                  password=REDIS_PASSWORD,
                  domain='account', name='default'):
@@ -52,7 +52,7 @@ class AccoutRedisClient(RedisClient):
         return self.db.set(self.get_key(key), value)
 
     def get(self, key):
-        return self.db.get(self.get_key(key).decode('utf-8'))
+        return self.db.get(self.get_key(key)).decode('utf-8')
 
     def delete(self, key):
         return self.db.delete(self.get_key(key))
@@ -62,10 +62,12 @@ class AccoutRedisClient(RedisClient):
             group = key.decode('utf-8').split(':')
             if len(group) == 3:
                 username = group[2]
+                print('{} {}'.format(username, self.get(username)))
                 yield {
                     'username': username,
                     'password': self.get(username)
                 }
+
 
 class CookieRedisClient(RedisClient):
     def __init__(self, host=REDIS_HOST, port=REDIS_PORT,
@@ -77,10 +79,11 @@ class CookieRedisClient(RedisClient):
         self.name = name
 
     def set(self, key, value):
+        print("set key{}:value {}".format(self.get_key(key), value))
         return self.db.set(self.get_key(key), value)
 
     def get(self, key):
-        return self.db.get(self.get_key(key).decode('utf-8'))
+        return self.db.get(self.get_key(key)).decode('utf-8')
 
     def delete(self, key):
         return self.db.delete(self.get_key(key))
@@ -97,7 +100,7 @@ class CookieRedisClient(RedisClient):
 
     def random(self):
         keys = self.get_keys()
-        res = self.db_get(random.choice(keys)).decode('utf-8')
+        res = self.db.get(random.choice(keys)).decode('utf-8')
         return res
 
     def count(self):
