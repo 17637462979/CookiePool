@@ -44,7 +44,7 @@ class Scheduler(object):
         if CREATOR_ENABLED:
             creator_process = Process(target=self.creater)
             creator_process.start()
-            
+
         if TESTER_ENABLED:
             tester_process = Process(target=self.tester)
             tester_process.start()
