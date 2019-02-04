@@ -4,6 +4,7 @@ from multiprocessing import Process
 from .api import app
 from .setting import *
 from .creator import WeiboCookieCreator
+from .tester import WeiboValidTester
 
 class Scheduler(object):
     def api(self):
@@ -21,9 +22,18 @@ class Scheduler(object):
             except Exception as e:
                 print(e.args)
 
-    def tester(self):
-        pass
-        #todo
+    def tester(self, cycle=CYCLE):
+        while True:
+            print('Cookie测试器开始运行')
+            try:
+                for name, cls in TESTER_MAP.items():
+                    tester = eval(cls + '(name="' + name + '")')
+                    tester.run()
+                    print('Cookie测试器运行完成')
+                    del tester
+                    time.sleep(cycle)
+            except Exception as e:
+                print(e.args)
 
 
     def run(self):
@@ -34,7 +44,7 @@ class Scheduler(object):
         if CREATOR_ENABLED:
             creator_process = Process(target=self.creater)
             creator_process.start()
-
+            
         if TESTER_ENABLED:
             tester_process = Process(target=self.tester)
             tester_process.start()
