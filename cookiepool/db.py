@@ -1,9 +1,11 @@
+# -*- coding: utf-8 -*-
+
 import redis
-from .setting import *
 import random
+from .setting import *
 
 class RedisClient():
-    def __instancecheck__(self, host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWORD):
+    def __init__(self, host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWORD):
         self.db = redis.StrictRedis(host=host, port=port, password=password)
         self.domain = REDIS_DOMAIN
         self.name = REDIS_NAME
