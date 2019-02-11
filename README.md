@@ -10,3 +10,5 @@ python3 ./run.py  #开始获取cookie，并插入redis，提供json接口
 ```
 
 ## 拓展
+- [x] weibo cookies
+- [ ] zhihu cookies
